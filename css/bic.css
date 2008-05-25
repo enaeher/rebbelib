@@ -1,0 +1,61 @@
+body {
+  background-color: #1a1a17;
+  font-family: 'Century Gothic', 'sans-serif';
+  margin: 0; overflow: hidden;
+  font-weight: bold;
+}
+
+div.overlay { 
+  position: fixed;
+  width: 100%;
+  height: 1.5em;
+  opacity: .9;
+  color: white;
+  background-color: #111100;
+  padding: 1em;
+  border: 0px solid white;
+}
+
+div#header {
+  top: 0;
+  border-bottom-width: 1px;
+}
+
+div#footer {
+  bottom: 0;
+  border-top-width: 1px;
+}
+
+div#map {
+  position: absolute;
+  width: 300%;
+}
+
+div.hidden { 
+  visibility: hidden;  
+}
+
+div.container {
+  float: left;
+  clear: left;
+  height: 210px;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 300%;
+}
+
+div.cover {
+  float: left;
+  clear: none;
+  height: 100%;
+  text-align: center;
+  overflow: hidden;
+  padding: 5px;
+  white-space: nowrap;
+}
+
+div.cover img { margin: 0px; }
+
+div.current { 
+  background-color: #ffc90b;
+}
