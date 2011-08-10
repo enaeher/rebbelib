@@ -36,9 +36,9 @@ div.hidden {
 }
 
 div.container {
+  position: relative;
   float: left;
   clear: left;
-  height: 210px;
   overflow: hidden;
   white-space: nowrap;
   width: 300%;
