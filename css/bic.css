@@ -28,6 +28,7 @@ div#footer {
 
 div#map {
   position: absolute;
+  top: 0px;"
   width: 300%;
 }
 
@@ -35,7 +36,7 @@ div.hidden {
   visibility: hidden;  
 }
 
-div.container {
+div.row {
   position: relative;
   float: left;
   clear: left;

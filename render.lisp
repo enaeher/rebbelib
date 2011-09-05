@@ -25,7 +25,9 @@
                               (loop for column from 0 upto (1- *map-width*)                              
                                  collecting (book-to-alist (gethash column (gethash row (rows map))))))))
                  ", globalMapASIN = "
-                 (who:str (json:encode-json-to-string asin)))
+                 (who:str (json:encode-json-to-string asin))
+		 ", globalImageHeight = "
+		 (who:str *cover-image-max-dimension*))
         (:link :rel "stylesheet" :type "text/css" :href "css/bic.css"))
        (:body
         (:div :id "map"
@@ -46,7 +48,7 @@
   (who:with-html-output-to-string (var)
     (loop for x from 0 upto (1- *map-width*)
        do
-       (who:htm (:div :class "container"
+       (who:htm (:div :class "row"
                       (loop for y from 0 upto (1- *map-height*)
                          do
                          (who:htm (:div :class "cover"

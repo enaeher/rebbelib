@@ -2,7 +2,7 @@
 (in-package :rebbelib-system)
 
 (defsystem :rebbelib
-	:depends-on (:cxml :cl-ppcre :drakma :hunchentoot :xpath :cl-who :cl-json :stefil)
+	:depends-on (:cxml :cl-ppcre :drakma :hunchentoot :xpath :cl-who :cl-json :stefil :zs3)
 	:serial t
         :components
         ((:file "package")
