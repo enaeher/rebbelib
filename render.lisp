@@ -2,7 +2,7 @@
 
 (h:define-easy-handler (render-map :uri "/" :default-request-type :get)
     (asin)
-  (let* ((asin (or asin
+  (let* ((asin (or 
 		   "1933633867"
 		   "0394719654"
 		   "0805026983"
@@ -42,7 +42,11 @@
               (:div :class "binding")
               (:div :class "label")
               (:div :class "detail-page-uri"))
-        (:script :src "js/movement.js"))))))
+        (:script :src "js/bookmap.js")
+	(:script :src "js/row.js")
+	(:script :src "js/book.js")
+	(:script :src "js/util.js")
+	(:script :src "js/toplevel.js"))))))
 
 (defun map-to-html (map)
   (check-type map book-map)
