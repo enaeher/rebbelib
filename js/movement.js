@@ -9,9 +9,11 @@ eval(base2.JavaScript.namespace);
 bic = window.bic || {};
 
 bic.fillWithBooks = function (books) {
+  console.log ('bang');
+  var row = this;
   books.forEach (
     function (book) {
-      var cover = newRow.appendChild (document.createElement ("div")),
+      var cover = row.appendChild (document.createElement ("div")),
 	newImg = document.createElement ("img");
       cover.classList.add ('cover');
       cover.appendChild (newImg);
@@ -20,13 +22,14 @@ bic.fillWithBooks = function (books) {
       cover.metadata = book;
     }
   );
-  bic.makeRow (this); 
-  this.map.refreshForRow (tow);
+  bic.makeRow (row);
+  this.map.refreshForRow (row);
 }
 
 bic.newRow = function (books) {
   var newRow = document.createElement ("div");
     newRow.classList.add ("row");
+  newRow.fillWithBooks = bic.fillWithBooks;
   newRow.style.height = this.rowPixelHeight + "px";
   return newRow;
 }
@@ -40,8 +43,6 @@ bic.refreshForRow = function (newRow) {
 }
 
 bic.shiftUp = function () {
-  console.log (this);
-  console.log (this.getRows()[this.getRows().length - 1].parentNode);
   this.removeChild (this.getRows()[this.getRows().length - 1]);
   var newRow = this.newRow ();
   this.insertBefore (newRow, this.getRows()[0]);
@@ -60,18 +61,21 @@ bic.shiftDown = function () {
 
 bic.shiftVertically = function (yOffset) {
   var shiftFn = (yOffset > 0) ? this.shiftDown : this.shiftUp,
-    rowToQueryBy = this.getRows()[(yOffset > 0) ? 0 : this.getRows().length - 1],
-    newEmptyRows = new Array2;
+    booksToQueryBy = this.getRows()[(yOffset > 0) ? 0 : this.getRows().length - 1].childNodes,
+    newEmptyRows = new Array2,
+    rowLength = this.rowLength;
 
   for (i = 0; i < Math.abs(yOffset); i++) {    
     newEmptyRows.push (shiftFn.call (this));
   }
   bic.getMoreBooks (
-    Array2.map (rowToQueryBy, function (book) { return book.metadata.asin; }),
-    Math.abs (yOffset) * this.rowLength,
+    Array2.map (booksToQueryBy, function (book) { return book.metadata.asin; }),
+    Math.abs (yOffset) * rowLength,
     function (books) {
       for (i = 0; i < Math.abs (yOffset); i++) {
-	newEmptyRows[0].fillWithBooks (books.slice (this.rowLength * 0, this.rowLength * i + this.rowLength));
+	console.log ('rowLength ' + rowLength)
+	console.log (books.slice (rowLength * i, rowLength * i + rowLength));
+	newEmptyRows[0].fillWithBooks (books.slice (rowLength * i, rowLength * i + rowLength));
       }
     }
   );

@@ -19,14 +19,20 @@
 	 (signature (zs3::sign-string *aws-secret-key*
 				      (format nil "GET~%ecs.amazonaws.com~%/onca/xml~%~A"
 					      (zs3::alist-to-url-encoded-string parameters)))))
-    (cxml:parse (drakma:http-request *aws-base-uri*
-				     :parameters (append parameters `(("Signature" . ,signature)))
-				     :want-stream t)
-		(cxml-dom:make-dom-builder))))
+    (multiple-value-bind (stream status headers uri)
+	(drakma:http-request *aws-base-uri*
+			     :parameters (append parameters `(("Signature" . ,signature)))
+			     :want-stream t)
+      (ecase status
+	(200
+	 (cxml:parse stream (cxml-dom:make-dom-builder)))
+	(503
+	 (error (princ-to-string (xpath:evaluate "Error" (dom:document-element (cxml:parse stream (cxml-dom:make-dom-builder)))))))))))
 
 (defmacro with-aws-response ((response (&rest aws-arguments)) &body body)
   `(let ((,response (aws ,@aws-arguments)))
      (xpath:with-namespaces (("" *aws-namespace-uri*))
+       #-(and)
        (format (swank::connection.user-output (swank::default-connection)) "~%[~a] ~a" (get-universal-time) (list ,@aws-arguments))
        ,@body)))
 
