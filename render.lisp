@@ -3,6 +3,7 @@
 (h:define-easy-handler (render-map :uri "/" :default-request-type :get)
     (asin)
   (let* ((asin (or asin
+		   "1933633867"
 		   "0394719654"
 		   "0805026983"
                    (h:cookie-in "ASIN")

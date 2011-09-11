@@ -8,12 +8,7 @@ eval(base2.JavaScript.namespace);
 
 bic = window.bic || {};
 
-bic.newRow = function (books) {
-  var newRow = document.createElement ("div");
-  
-  newRow.classList.add ("row");
-  newRow.style.height = this.rowPixelHeight + "px";
-
+bic.fillWithBooks = function (books) {
   books.forEach (
     function (book) {
       var cover = newRow.appendChild (document.createElement ("div")),
@@ -25,7 +20,14 @@ bic.newRow = function (books) {
       cover.metadata = book;
     }
   );
+  bic.makeRow (this); 
+  this.map.refreshForRow (tow);
+}
 
+bic.newRow = function (books) {
+  var newRow = document.createElement ("div");
+    newRow.classList.add ("row");
+  newRow.style.height = this.rowPixelHeight + "px";
   return newRow;
 }
 
@@ -33,37 +35,51 @@ bic.newRow = function (books) {
 // books: the new book objects from the server, used to populate the new row in the direction of the shift
 
 bic.refreshForRow = function (newRow) {
-  this.rows = this.querySelectorAll("div.row").map (function (row) { return row; });
   newRow.querySelectorAll("img").forEach (bic.makeCover);
   newRow.childNodes[Math.floor(newRow.childNodes.length / 2)].center(true);
 }
 
-bic.shiftUp = function (books) {
-  console.log ('shiftup');
-  this.removeChild (this.rows[this.rows.length - 1]);
-  var newRow = this.newRow (books);
-  this.insertBefore (newRow, this.rows[0]);
-  console.log (newRow.offsetHeight);
+bic.shiftUp = function () {
+  console.log (this);
+  console.log (this.getRows()[this.getRows().length - 1].parentNode);
+  this.removeChild (this.getRows()[this.getRows().length - 1]);
+  var newRow = this.newRow ();
+  this.insertBefore (newRow, this.getRows()[0]);
   this.style.top = (parseInt (this.style.top) - this.rowPixelHeight + 'px'); // FIXME
-  bic.makeRow (newRow); 
-  this.refreshForRow (newRow);
+  return newRow;
 }
 
-bic.shiftDown = function (books) {
-  this.removeChild (this.rows[0]);
-  var newRow = this.newRow (books);
+bic.shiftDown = function () {
+  this.removeChild (this.getRows()[0]);
+  var newRow = this.newRow ();
   this.appendChild (newRow);
   this.style.top = (parseInt (this.style.top) + this.rowPixelHeight + 'px'); // FIXME
-  bic.makeRow (newRow); 
-  this.refreshForRow (newRow);
+  return newRow;
 }
 
 
-bic.shiftVertically = function (yOffset, books) {
-  var shiftFn = (yOffset > 0) ? this.shiftDown : this.shiftUp;
-  for (i = 0; i < Math.abs(yOffset); i++) {
-    shiftFn.call (this, books.slice (this.rowLength * i, this.rowLength * i + this.rowLength));
+bic.shiftVertically = function (yOffset) {
+  var shiftFn = (yOffset > 0) ? this.shiftDown : this.shiftUp,
+    rowToQueryBy = this.getRows()[(yOffset > 0) ? 0 : this.getRows().length - 1],
+    newEmptyRows = new Array2;
+
+  for (i = 0; i < Math.abs(yOffset); i++) {    
+    newEmptyRows.push (shiftFn.call (this));
   }
+  bic.getMoreBooks (
+    Array2.map (rowToQueryBy, function (book) { return book.metadata.asin; }),
+    Math.abs (yOffset) * this.rowLength,
+    function (books) {
+      for (i = 0; i < Math.abs (yOffset); i++) {
+	newEmptyRows[0].fillWithBooks (books.slice (this.rowLength * 0, this.rowLength * i + this.rowLength));
+      }
+    }
+  );
+}
+
+bic.getRows = function () {
+  return this.querySelectorAll("div.row").map (function (row) { return row } );;
+//  bookMap.querySelectorAll("div.row").map ( function (row) { return row } );
 }
 
 bic.makeMap = function (bookMap) {
@@ -72,9 +88,13 @@ bic.makeMap = function (bookMap) {
   var aRow = bookMap.querySelector("div.row");
   var rowPixelHeight = aRow.offsetHeight;
   var rowLength = aRow.childNodes.length;
-  bookMap.rows = bookMap.querySelectorAll("div.row").map (bic.makeRow);
+
+  bookMap.getRows = bic.getRows;
+  
+  bookMap.getRows().map (bic.makeRow);
+
   bookMap.querySelectorAll ("img").forEach (bic.makeCover);
-  bookMap.currentBook = bookMap.rows[Math.floor(bookMap.rows.length / 2)].childNodes[Math.floor(aRow.childNodes.length / 2)];
+  bookMap.currentBook = bookMap.getRows()[Math.floor(bookMap.getRows().length / 2)].childNodes[Math.floor(aRow.childNodes.length / 2)];
   
   bookMap.aRow = aRow;
   bookMap.rowPixelHeight = rowPixelHeight;
@@ -90,7 +110,7 @@ bic.makeMap = function (bookMap) {
     bookMap.shiftHorizontally = function (xOffset, books) {
 	for (i = 0; i < Math.abs(xOffset); i++) {
 
-	    bookMap.rows.forEach (
+	  bookMap.getRows().forEach (
 		function (row) {
 		    var damocles = row.childNodes [ xOffset > 0 ? i : (row.childNodes.length - 1)]; /* I thought I was so fucking clever and now I can't remember what the fuck this is */
 		    var adjustmentPixelWidth = damocles.offsetWidth;
@@ -177,26 +197,17 @@ bic.getMoreBooks = function (similarTo, quantity, callback) {
 
 }
 
-bic.makeCover = function (image) {
-    var cover = image.parentNode;
-    var row = cover.parentNode;
-
-    cover.row = row;
-    cover.getIndex = bic.getIndex;
-    cover.row.getIndex = bic.getIndex;
-
-    base2.DOM.bind(cover); // necessary to use classList
-
-    cover.makeCurrent = function () {
+bic.makeCurrent = function () {
 	var previousX,
-	    previousY;
+	  previousY, 
+	  that = this;
 
 	if (globalCurrent) {
 	    previousX = globalCurrent.getIndex();
 	    previousY = globalCurrent.row.getIndex();
 	    globalCurrent.classList.remove("current");
 	}
-	globalCurrent = cover;
+	globalCurrent = this;
 	globalCurrent.classList.add("current");
 	globalDetailPane.showBook (globalCurrent);
 	var xOffset = previousX ? globalCurrent.getIndex() - previousX : 0;
@@ -204,34 +215,44 @@ bic.makeCover = function (image) {
 
 	if (xOffset != 0) {
 	    bic.getMoreBooks (
-		Array2.map (row.map.rows,
+	      Array2.map (this.row.map.getRows(),
 			    function (row) {
 				return row[(xOffset > 0) ? "lastChild" : "firstChild"].metadata.asin;
 			    }
 			   ),
 		Math.abs (xOffset) * 9,
-		function (books) { row.map.shiftHorizontally (xOffset, books) }
+		function (books) { that.row.map.shiftHorizontally (xOffset, books) }
 	    );
 	}
 	if (yOffset != 0) {
-	    bic.getMoreBooks (
-		Array2.map (row.map.rows[(yOffset > 0) ? 0 : (row.map.rows.length - 1)].childNodes,
-			    function (book) {
-				return book.metadata.asin;
-			    }
-			   ),		
-		Math.abs (yOffset) * 9,
-		function (books) { row.map.shiftVertically (yOffset, books) }
-	    );
+	  this.row.map.shiftVertically (yOffset);
 	}
 
-	cover.row.center();
+	this.row.center();
 
-	Array2.forEach (cover.row.parentNode.childNodes,
-			function (row) { row.childNodes[cover.getIndex()].center(); });
+	Array2.forEach (this.row.parentNode.childNodes,
+			function (row) {
+			  if (row.center) {
+			    row.childNodes[that.getIndex()].center(); 
+			  }
+			}
+		       );
 
 	window.focus();
-    }
+
+}
+
+bic.makeCover = function (image) {
+  var cover = image.parentNode;
+  var row = cover.parentNode;
+  
+  cover.row = row;
+  cover.getIndex = bic.getIndex;
+  cover.row.getIndex = bic.getIndex;
+  
+  base2.DOM.bind(cover); // necessary to use classList
+  
+  cover.makeCurrent = bic.makeCurrent;
 	
     cover.metadata = cover.metadata || globalJSONMap[cover.getIndex()][row.getIndex()];
 
